@@ -18,6 +18,4 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     boolean existsByRoomIdAndCheckOutAfterAndCheckInBefore(Long roomId, LocalDate checkIn, LocalDate checkOut);
 
     Booking findByBookingConfirmationCodeAndUser_ProfileId(String bookingConfirmationCode, Long userId);
-    //Booking findByBookingConfirmationCodeAndUserId(String bookingConfirmationCode, Long userId);
-
 }

@@ -6,9 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface HotelRepository extends JpaRepository<Hotel, Long> {
-
-    /*@Query("SELECT h FROM Hotel h WHERE h.name = :hotelName")
-    Hotel findByHotelNameIgnoreCase(@Param("hotelName") String name);*/
-
-
 }

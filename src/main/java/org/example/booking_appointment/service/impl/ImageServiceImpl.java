@@ -8,6 +8,7 @@ import org.example.booking_appointment.dto.auth.ProfileResponse;
 import org.example.booking_appointment.dto.image.UploadedImageDto;
 import org.example.booking_appointment.entity.Avatar;
 import org.example.booking_appointment.entity.Profile;
+import org.example.booking_appointment.exception.NotFoundException;
 import org.example.booking_appointment.mapper.ProfileMapper;
 import org.example.booking_appointment.repository.AvatarRepository;
 import org.example.booking_appointment.repository.ProfileRepository;
@@ -32,6 +33,9 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     public ProfileResponse changeProfilePicture(MultipartFile image) {
         Profile currentUser = authService.getCurrentProfile();
+        if (currentUser == null) {
+            throw new NotFoundException("User not found");
+        }
 
         String uploadedPublicId = null;
 
@@ -40,7 +44,6 @@ public class ImageServiceImpl implements ImageService {
         }
 
         try {
-            // 1) pokud má profil avatar, smaž ho (cloud + DB) a odpoj
             if (currentUser.getAvatar() != null) {
                 Avatar old = currentUser.getAvatar();
                 try {
@@ -51,16 +54,14 @@ public class ImageServiceImpl implements ImageService {
                 avatarRepository.delete(old);
             }
 
-            // 2) upload nového
             UploadedImageDto uploaded = cloudinaryService.uploadImage(image, "avatars");
             uploadedPublicId = uploaded.getPublicId();
 
             Avatar newAvatar = cloudinaryService.buildProfileImage(uploaded, currentUser);
-            avatarRepository.save(newAvatar);    // persistneme obrázek
-            currentUser.setAvatar(newAvatar);             // nastavíme aktuální avatar na profilu
-            profileRepository.save(currentUser);          // uložíme profil
+            avatarRepository.save(newAvatar);
+            currentUser.setAvatar(newAvatar);
+            profileRepository.save(currentUser);
 
-            // 3) response přes sjednocený mapper
             return profileMapper.toResponse(currentUser);
 
         } catch (RuntimeException ex) {
@@ -80,6 +81,9 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     public ProfileResponse deleteProfilePicture() {
         Profile currentUser = authService.getCurrentProfile();
+        if (currentUser == null) {
+            throw new NotFoundException("User not found");
+        }
 
         Avatar userAvatar = currentUser.getAvatar();
         if (userAvatar == null) {

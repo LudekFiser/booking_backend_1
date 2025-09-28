@@ -37,22 +37,6 @@ public interface RoomRepository extends JpaRepository<Room, Long>, JpaSpecificat
     List<Room> getRoomsByHotelId(@Param("hotelId") Long hotelId);
 
 
-
-    /*@Query("""
-    SELECT r
-    FROM Room r
-    WHERE r.hotel.location.city = :city
-      AND r.id NOT IN (
-          SELECT b.room.id
-          FROM Booking b
-          WHERE b.checkIn < :checkOutDate
-            AND b.checkOut > :checkInDate
-      )
-    """)
-    List<Room> findAvailableRoomsByCityAndDates(@Param("city") String city,
-                                                @Param("checkInDate") LocalDate checkInDate,
-                                                @Param("checkOutDate") LocalDate checkOutDate);*/
-
     @Query("""
     SELECT r
     FROM Room r
@@ -65,6 +49,5 @@ public interface RoomRepository extends JpaRepository<Room, Long>, JpaSpecificat
       )
     """)
     List<Room> findAvailableRoomsByCityAndDates(@Param("city") String city,
-                                                @Param("checkInDate") LocalDate checkInDate,
-                                                @Param("checkOutDate") LocalDate checkOutDate);
+                                                @Param("checkInDate") LocalDate checkInDate,@Param("checkOutDate") LocalDate checkOutDate);
 }

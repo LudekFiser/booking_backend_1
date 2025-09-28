@@ -8,6 +8,7 @@ import org.example.booking_appointment.dto.booking.SearchAvailableRoomsResponse;
 import org.example.booking_appointment.dto.room.RoomSummaryDto;
 import org.example.booking_appointment.entity.Room;
 import org.example.booking_appointment.enums.ROLE;
+import org.example.booking_appointment.exception.NotFoundException;
 import org.example.booking_appointment.exception.UserNotFoundException;
 import org.example.booking_appointment.mapper.BookingMapper;
 import org.example.booking_appointment.mapper.RoomMapper;
@@ -73,7 +74,7 @@ public class BookingServiceImpl implements BookingService {
     public BookingResponse createBooking(BookingRequest req, Long hotelId, Long roomId) {
         var currentProfile = authService.getCurrentProfile();
         if (currentProfile == null) {
-            throw new UserNotFoundException();
+            throw new NotFoundException("User not found");
         }
         if (!currentProfile.getRole().equals(ROLE.USER)) {
             throw new RuntimeException("Only users can create booking");
@@ -143,9 +144,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingResponse getBookingByBookingConfirmationCode(String bookingConfirmationCode) {
         var currentProfile =  authService.getCurrentProfile();
-        if (currentProfile == null) {
-            throw new UserNotFoundException();
-        }
+
         var userBooking = bookingRepository.findByBookingConfirmationCodeAndUser_ProfileId(bookingConfirmationCode, currentProfile.getId());
         if (userBooking == null) {
             throw new RuntimeException("No booking found!");

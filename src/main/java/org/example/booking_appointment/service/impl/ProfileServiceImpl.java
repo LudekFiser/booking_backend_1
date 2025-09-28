@@ -8,6 +8,10 @@ import org.example.booking_appointment.entity.Profile;
 import org.example.booking_appointment.entity.User;
 import org.example.booking_appointment.enums.ROLE;
 import org.example.booking_appointment.exception.*;
+import org.example.booking_appointment.exception.password.PasswordException;
+import org.example.booking_appointment.exception.password.PasswordResetReqNotMatching;
+import org.example.booking_appointment.exception.password.PasswordsDoNotMatchException;
+import org.example.booking_appointment.exception.password.PasswordsMatchingException;
 import org.example.booking_appointment.mapper.ProfileMapper;
 import org.example.booking_appointment.repository.AvatarRepository;
 import org.example.booking_appointment.repository.HotelOwnerRepository;
@@ -35,24 +39,20 @@ public class ProfileServiceImpl implements ProfileService {
     private final OtpService otpService;
     private final CloudinaryService cloudinaryService;
     private final AuthService authService;
-    //private final SongRepository songRepository;
-    //private final SongMapper songMapper;
-    //private final LikedSongRepository likedSongRepository;
 
 
     private boolean emailAlreadyUsed(String email) {
         return profileRepository.existsByEmail(email);
     }
 
-
     @Override
     public ProfileResponse register(RegisterRequest req) {
-        if(profileRepository.existsByEmail(req.getEmail())) {
-            throw new IllegalArgumentException("Email is already used");
-        }
-        /*if (emailAlreadyUsed(req.getEmail())) {
+        /*if(profileRepository.existsByEmail(req.getEmail())) {
             throw new IllegalArgumentException("Email is already used");
         }*/
+        if (emailAlreadyUsed(req.getEmail())) {
+            throw new IllegalArgumentException("Email is already used");
+        }
         if (!Profile.isAdult(req.getDateOfBirth()))  {
             throw new NotOldEnoughException();
         }
@@ -78,7 +78,6 @@ public class ProfileServiceImpl implements ProfileService {
         return profileMapper.toResponse(profile);
     }
 
-
     @Override
     public ProfileResponse updateUser(UpdateUserRequest req) {
         Profile currentProfile = authService.getCurrentProfile();
@@ -101,7 +100,6 @@ public class ProfileServiceImpl implements ProfileService {
 
         return profileMapper.toResponse(currentProfile);
     }
-
 
     @Override
     public void deleteUser(DeleteAccountDto otp) {
@@ -133,11 +131,12 @@ public class ProfileServiceImpl implements ProfileService {
     public void forgotPassword(ResetPasswordRequest req) {
 
         if(!req.getNewPassword().equals(req.getRepeatNewPassword())) {
-            throw new PasswordResetReqNotMatching();
+            throw new PasswordException("Passwords do not match");
+            //throw new PasswordResetReqNotMatching();
         }
 
         Profile profile = profileRepository.findByEmail(req.getEmail())
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (profile.getVerificationCode() == null ||
                 profile.getVerificationCodeExpiration() == null ||
@@ -146,30 +145,34 @@ public class ProfileServiceImpl implements ProfileService {
             throw new RuntimeException("Invalid or expired OTP");
         }
 
-
         profile.setPassword(passwordEncoder.encode(req.getNewPassword()));
         profile.setVerificationCode(null);
         profile.setVerificationCodeExpiration(null);
         profileRepository.save(profile);
     }
 
-
     @Override
     public SearchProfileResponse findByProfileId(Long id) {
         var profile = profileRepository.findById(id)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new NotFoundException("User not found"));
         return profileMapper.toSearchResponse(profile);
     }
-
 
     @Override
     public void changePassword(ChangePasswordRequest req) {
         Profile currentProfile = authService.getCurrentProfile();
+        if (currentProfile == null) {
+            throw new NotFoundException("User not found");
+        }
 
-        if (!passwordEncoder.matches(req.getOldPassword(), currentProfile.getPassword()))
-            throw new PasswordsDoNotMatchException();
-        if (passwordEncoder.matches(req.getNewPassword(), currentProfile.getPassword()))
-            throw new PasswordsMatchingException();
+        if (!passwordEncoder.matches(req.getOldPassword(), currentProfile.getPassword())) {
+            throw new PasswordException("Old Password does not match!");
+            //throw new PasswordsDoNotMatchException();
+        }
+        if (passwordEncoder.matches(req.getNewPassword(), currentProfile.getPassword())) {
+            throw new PasswordException("New password cannot be the same as the Old password!");
+            //throw new PasswordsMatchingException();
+        }
 
         // OTP validation
         if (currentProfile.getVerificationCode() == null) {
@@ -187,7 +190,6 @@ public class ProfileServiceImpl implements ProfileService {
         currentProfile.setVerificationCodeExpiration(null);
         profileRepository.save(currentProfile);
     }
-
 
     @Override
     public void verifyAccount(VerifyAccountRequest req) {

@@ -19,33 +19,4 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
 
     @Query("SELECT p FROM Profile p WHERE (:role IS NULL OR p.role = :role)")
     List<Profile> findByRoleOnly(@Param("role") ROLE role);
-
-
-    /*
-    @Query("""
-    SELECT DISTINCT p FROM Profile p
-    LEFT JOIN p.artist a
-    LEFT JOIN a.songs s
-    WHERE (:role IS NULL OR p.role = :role)
-      AND (:artistName IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :artistName, '%')))
-      AND (:songName IS NULL OR LOWER(s.title) LIKE LOWER(CONCAT('%', :songName, '%')))
-""")
-    List<Profile> findByRoleAndNameAndSong(@Param("role") ROLE role,
-                                           @Param("artistName") String artistName,
-                                           @Param("songName") String songName);*/
-
-
-    /*@Query("""
-    SELECT p FROM Profile p
-    WHERE (:role IS NULL OR p.role = :role)
-      AND (:artistName IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :artistName, '%')))
-""")
-    List<Profile> findByRoleAndName(@Param("role") ROLE role, @Param("artistName") String artistName);*/
-
-
-
-
-
-
-
 }

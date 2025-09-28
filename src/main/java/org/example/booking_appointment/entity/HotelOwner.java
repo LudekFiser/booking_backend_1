@@ -40,7 +40,7 @@ public class HotelOwner {
         return getHotels().size();
     }
 
-    public void insertHotel(Hotel hotel) {
+    public void addHotel(Hotel hotel) {
 
         this.hotels.add(hotel);
         hotel.setHotelOwner(this);

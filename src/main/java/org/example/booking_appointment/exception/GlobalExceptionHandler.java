@@ -2,12 +2,17 @@ package org.example.booking_appointment.exception;
 
 
 import org.example.booking_appointment.dto.ErrorDto;
+import org.example.booking_appointment.exception.password.PasswordException;
+import org.example.booking_appointment.exception.password.PasswordResetReqNotMatching;
+import org.example.booking_appointment.exception.password.PasswordsDoNotMatchException;
+import org.example.booking_appointment.exception.password.PasswordsMatchingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
@@ -32,17 +37,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
-    /*@ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleIllegalArgumentException(IllegalArgumentException ex) {
         return Map.of("error", ex.getMessage());
-    }*/
-    @ExceptionHandler(IllegalArgumentException.class)
+    }
+    /*@ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorDto>handleIllegalArgumentException(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new ErrorDto("Email is already registered!")
         );
-    }
+    }*/
 
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -52,33 +57,23 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleUserNotFoundException() {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new ErrorDto("User not found!")
-        );
+
+    @ExceptionHandler(PasswordException.class)
+    public ResponseEntity<ErrorDto> handlePasswordException(PasswordException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDto(ex.getMessage()));
     }
 
-    @ExceptionHandler(PasswordsDoNotMatchException.class)
-    public ResponseEntity<ErrorDto> handlePasswordsDoNotMatchException() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new ErrorDto("Old Password does not match!")
-        );
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorDto> handleNotFoundException(NotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorDto(ex.getMessage()));
     }
 
-    @ExceptionHandler(PasswordsMatchingException.class)
-    public ResponseEntity<ErrorDto> handlePasswordsMatchingException() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new ErrorDto("New password cannot be the same as the Old password!")
-        );
-    }
 
-    @ExceptionHandler(PasswordResetReqNotMatching.class)
-    public ResponseEntity<ErrorDto> handlePasswordResetReqNotMatchingException() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new ErrorDto("Passwords do not Match!")
-        );
-    }
+
 
     @ExceptionHandler(NotOldEnoughException.class)
     public ResponseEntity<ErrorDto> handleNotOldEnoughException() {

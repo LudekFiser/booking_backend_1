@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.booking_appointment.dto.hotel.CreateHotelRequest;
 import org.example.booking_appointment.dto.hotel.HotelResponse;
 import org.example.booking_appointment.dto.image.UploadedImageDto;
-import org.example.booking_appointment.dto.room.CreateRoomRequest;
-import org.example.booking_appointment.dto.room.RoomSummaryDto;
-import org.example.booking_appointment.enums.ROLE;
-import org.example.booking_appointment.exception.UserNotFoundException;
+import org.example.booking_appointment.exception.NotFoundException;
 import org.example.booking_appointment.mapper.HotelMapper;
 import org.example.booking_appointment.mapper.LocationMapper;
 import org.example.booking_appointment.mapper.RoomMapper;
@@ -44,11 +41,11 @@ public class HotelServiceImpl implements HotelService {
     public HotelResponse addHotel(CreateHotelRequest req, List<MultipartFile> images) {
         var currentProfile = authService.getCurrentProfile();
         if(currentProfile == null) {
-            throw new UserNotFoundException();
+            throw new NotFoundException("User not found");
         }
-        if (!currentProfile.getRole().equals(ROLE.HOTEL_OWNER)) {
+        /*if (!currentProfile.getRole().equals(ROLE.HOTEL_OWNER)) {
             throw new AccessDeniedException("You are not allowed to perform this action");
-        }
+        }*/
 
         if (locationRepository.existsByCountryAndCityAndStreetAndStreetNumberAndPostalCode(
                 req.getAddLocation().getCountry(), req.getAddLocation().getCity(),
@@ -87,7 +84,7 @@ public class HotelServiceImpl implements HotelService {
 
         var hotelOwner = currentProfile.getHotelOwner();
         hotelOwner.setNumOfHotels(hotelOwner.getNumOfHotels() + 1);
-        hotelOwner.insertHotel(hotel);
+        hotelOwner.addHotel(hotel);
         hotelOwnerRepository.save(hotelOwner);
 
         return hotelMapper.toResponse(hotel);
